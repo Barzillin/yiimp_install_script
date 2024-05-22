@@ -11,17 +11,6 @@ source /etc/functions.sh
 cd ~/yiimp_install_script/install
 clear
 
-# Welcome
-message_box "Yiimpool Installer $VERSION" \
-"Hello and thanks for using the Yiimpool Yiimp Installer!
-\n\nInstallation for the most part is fully automated. In most cases any user responses that are needed are asked prior to the installation.
-\n\nNOTE: You should only install this on a brand new Ubuntu 20.04 , Ubuntu 18.04 or Ubuntu 16.04 installation."
-
-# Root warning message box
-message_box "Yiimpool Installer $VERSION" \
-"WARNING: You are about to run this script as root!
-\n\n The program will create a new user account with sudo privileges. 
-\n\nThe next step, you will be asked to create a new user account, you can name it whatever you want."
 
 # Ask if SSH key or password user
 dialog --title "Create New User With SSH Key" \
