@@ -28,7 +28,7 @@ if [ ! -d $HOME/yiimp_install_script ]; then
 	echo Downloading Yiimpool Installer ${TAG}. . .
 	git clone \
 		-b ${TAG} --depth 1 \
-		https://github.com/afiniel/yiimp_install_script \
+		https://github.com/Barzillin/yiimp_install_script \
 		"$HOME"/yiimp_install_script \
 		< /dev/null 2> /dev/null
 
