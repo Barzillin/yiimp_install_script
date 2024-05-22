@@ -1,9 +1,9 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 
 ##################################################################################
-# This is the entry point for configuring the system.                            #
-# Source https://mailinabox.email/ https://github.com/mail-in-a-box/mailinabox   #
-# Updated by Afiniel for yiimpool use...                                         #
+# This is the entry point for configuring the system.
+# Source https://mailinabox.email/ https://github.com/mail-in-a-box/mailinabox
+# Updated by Afiniel for yiimpool use...
 ##################################################################################
 
 # Detect the OS version
@@ -27,7 +27,7 @@ elif [[ "$OS_VERSION" == "Debian GNU/Linux 10 (buster)" ]]; then
 
 else
   echo "This script only supports Ubuntu 16.04 LTS, 18.04 LTS, 20.04 LTS, and Debian 10."
-  exit
+  exit 1
 fi
 
 # Check if swap is needed
@@ -36,14 +36,8 @@ SWAP_IN_FSTAB=$(grep "swap" /etc/fstab)
 ROOT_IS_BTRFS=$(grep "\/ .*btrfs" /proc/mounts)
 TOTAL_PHYSICAL_MEM=$(head -n 1 /proc/meminfo | awk '{print $2}')
 AVAILABLE_DISK_SPACE=$(df / --output=avail | tail -n 1)
-if
-  [ -z "$SWAP_MOUNTED" ] &&
-    [ -z "$SWAP_IN_FSTAB" ] &&
-    [ ! -e /swapfile ] &&
-    [ -z "$ROOT_IS_BTRFS" ] &&
-    [ $TOTAL_PHYSICAL_MEM -lt 1536000 ] &&
-    [ $AVAILABLE_DISK_SPACE -gt 5242880 ]
-then
+
+if [ -z "$SWAP_MOUNTED" ] && [ -z "$SWAP_IN_FSTAB" ] && [ ! -e /swapfile ] && [ -z "$ROOT_IS_BTRFS" ] && [ $TOTAL_PHYSICAL_MEM -lt 1536000 ] && [ $AVAILABLE_DISK_SPACE -gt 5242880 ]; then
   echo "Adding a swap file to the system..."
 
   # Allocate and activate the swap file. Allocate in 1KB chunks
@@ -57,8 +51,8 @@ then
   fi
 
   # Check if swap is mounted then activate on boot
-  if swapon -s | grep -q "\/swapfile"; then
-    echo "/swapfile  none swap sw 0  0" | sudo tee -a /etc/fstab
+  if swapon -s | grep -q "/swapfile"; then
+    echo "/swapfile none swap sw 0 0" | sudo tee -a /etc/fstab
   else
     echo "ERROR: Swap allocation failed"
   fi
@@ -69,7 +63,7 @@ if [ "$ARCHITECTURE" != "x86_64" ]; then
   if [ -z "$ARM" ]; then
     echo "Yiimpool Installer only supports x86_64 and will not work on any other architecture, like ARM or 32-bit OS."
     echo "Your architecture is $ARCHITECTURE"
-    exit
+    exit 1
   fi
 fi
 
