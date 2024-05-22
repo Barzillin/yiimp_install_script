@@ -14,17 +14,26 @@ fi
 
 echo 'VERSION='"${TAG}"'' | sudo -E tee /etc/yiimpoolversion.conf >/dev/null 2>&1
 
+# Detect the OS version
+OS_VERSION=$(lsb_release -d | awk '{print $2, $3, $4}')
+if [[ "$OS_VERSION" == "Ubuntu 20.04" ]] || [[ "$OS_VERSION" == "Ubuntu 18.04" ]] || [[ "$OS_VERSION" == "Ubuntu 16.04" ]] || [[ "$OS_VERSION" == "Debian 10" ]]; then
+    echo "Supported OS detected: $OS_VERSION"
+else
+    echo "This script only supports Ubuntu 16.04 LTS, 18.04 LTS, 20.04 LTS, and Debian 10."
+    exit 1
+fi
+
 # Clone the Yiimp Install Script repository if it doesn't exist.
 if [ ! -d "$HOME/yiimp_install_script" ]; then
     if [ ! -f /usr/bin/git ]; then
-        echo Installing git . . .
+        echo "Installing git . . ."
         sudo apt-get -q -q update
         sudo DEBIAN_FRONTEND=noninteractive apt-get -q -q install -y git < /dev/null
         clear
         echo
     fi
     
-    echo Downloading Yiimpool Installer ${TAG}. . .
+    echo "Downloading Yiimpool Installer ${TAG}. . ."
     git clone \
         -b ${TAG} --depth 1 \
         https://github.com/Barzillin/yiimp_install_script \
@@ -44,7 +53,7 @@ cd "$HOME/yiimp_install_script/" || { echo "Directory $HOME/yiimp_install_script
 # Update it.
 sudo chown -R "$USER" "$HOME/yiimp_install_script/.git/"
 if [ "${TAG}" != "$(git describe --tags)" ]; then
-    echo Updating Yiimpool Installer to ${TAG} . . .
+    echo "Updating Yiimpool Installer to ${TAG} . . ."
     git fetch --depth 1 --force --prune origin tag ${TAG}
     if ! git checkout -q ${TAG}; then
         echo "Update failed. Did you modify something in $(pwd)?"
