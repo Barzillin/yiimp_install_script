@@ -5,25 +5,32 @@
 # Source https://mailinabox.email/ https://github.com/mail-in-a-box/mailinabox   #
 # Updated by Afiniel for yiimpool use...                                         #
 ##################################################################################
-if [ "$(lsb_release -d | sed 's/.*:\s*//' | sed 's/20\.04\.[0-9]/20.04/')" == "Ubuntu 20.04 LTS" ]; then
+
+# Detect the OS version
+OS_VERSION=$(lsb_release -d | sed 's/.*:\s*//')
+
+if [[ "$OS_VERSION" == "Ubuntu 20.04 LTS" ]]; then
   DISTRO=20
   sudo chmod g-w /etc /etc/default /usr
 
-elif [ "$(lsb_release -d | sed 's/.*:\s*//' | sed 's/18\.04\.[0-9]/18.04/')" == "Ubuntu 18.04 LTS" ]; then
+elif [[ "$OS_VERSION" == "Ubuntu 18.04 LTS" ]]; then
   DISTRO=18
   sudo chmod g-w /etc /etc/default /usr
 
-elif [ "$(lsb_release -d | sed 's/.*:\s*//' | sed 's/16\.04\.[0-9]/16.04/')" == "Ubuntu 16.04 LTS" ]; then
+elif [[ "$OS_VERSION" == "Ubuntu 16.04 LTS" ]]; then
   DISTRO=16
   sudo chmod g-w /etc /etc/default /usr
 
+elif [[ "$OS_VERSION" == "Debian GNU/Linux 10 (buster)" ]]; then
+  DISTRO=10
+  sudo chmod g-w /etc /etc/default /usr
+
 else
-  echo "This script only supports Ubuntu 16.04 LTS, 18.04 LTS, and 20.04 LTS."
+  echo "This script only supports Ubuntu 16.04 LTS, 18.04 LTS, 20.04 LTS, and Debian 10."
   exit
 fi
 
-# Check if swap is needed.
-
+# Check if swap is needed
 SWAP_MOUNTED=$(cat /proc/swaps | tail -n+2)
 SWAP_IN_FSTAB=$(grep "swap" /etc/fstab)
 ROOT_IS_BTRFS=$(grep "\/ .*btrfs" /proc/mounts)
