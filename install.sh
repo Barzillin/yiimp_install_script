@@ -1,66 +1,104 @@
 #!/usr/bin/env bash
-#########################################################
+
+##################################################################################
+# This is the entry point for configuring the system.
 # Source https://mailinabox.email/ https://github.com/mail-in-a-box/mailinabox
-# Updated by Afiniel for Yiimpool use...
-# This script is intended to be run like this:
-#
-# curl https://raw.githubusercontent.com/afiniel/yiimp_install_script/master/install.sh | bash
-#
-#########################################################
+# Updated by Afiniel for yiimpool use...
+##################################################################################
 
-if [ -z "${TAG}" ]; then
-    TAG=v0.9.3
-fi
-
-echo 'VERSION='"${TAG}"'' | sudo -E tee /etc/yiimpoolversion.conf >/dev/null 2>&1
-
-# Detect the OS version
-OS_VERSION=$(lsb_release -d | awk '{print $2, $3, $4}')
-if [[ "$OS_VERSION" == "Ubuntu 20.04" ]] || [[ "$OS_VERSION" == "Ubuntu 18.04" ]] || [[ "$OS_VERSION" == "Ubuntu 16.04" ]] || [[ "$OS_VERSION" == "Debian 10" ]]; then
-    echo "Supported OS detected: $OS_VERSION"
+# Recall the last settings used if we're running this a second time.
+if [ -f /etc/yiimpool.conf ]; then
+    # Load the old .conf file to get existing configuration options loaded
+    # into variables with a DEFAULT_ prefix.
+    cat /etc/yiimpool.conf | sed s/^/DEFAULT_/ >/tmp/yiimpool.prev.conf
+    source /tmp/yiimpool.prev.conf
+    source /etc/yiimpooldonate.conf
+    source /etc/yiimpoolversion.conf
+    rm -f /tmp/yiimpool.prev.conf
 else
-    echo "This script only supports Ubuntu 16.04 LTS, 18.04 LTS, 20.04 LTS, and Debian 10."
-    exit 1
+    FIRST_TIME_SETUP=1
 fi
 
-# Clone the Yiimp Install Script repository if it doesn't exist.
-if [ ! -d "$HOME/yiimp_install_script" ]; then
-    if [ ! -f /usr/bin/git ]; then
-        echo "Installing git . . ."
-        sudo apt-get -q -q update
-        sudo DEBIAN_FRONTEND=noninteractive apt-get -q -q install -y git < /dev/null
-        clear
-        echo
+if [[ ("$FIRST_TIME_SETUP" == "1") ]]; then
+    clear
+    cd $HOME/yiimp_install_script/install
+
+    # copy functions to /etc
+    source functions.sh
+    sudo cp -r functions.sh /etc/
+    sudo cp -r editconf.py /usr/bin
+    sudo chmod +x /usr/bin/editconf.py
+
+    # Check system setup: Are we running as root on Ubuntu 16.04, 18.04, 20.04, or Debian 10 on a
+    # machine with enough memory?
+    # If not, this shows an error and exits.
+    source preflight.sh
+
+    # Ensure Python reads/writes files in UTF-8. If the machine
+    # triggers some other locale in Python, like ASCII encoding,
+    # Python may not be able to read/write files. This is also
+    # in the management daemon startup script and the cron script.
+
+    if ! locale -a | grep en_US.utf8 >/dev/null; then
+        # Generate locale if not exists
+        hide_output locale-gen en_US.UTF-8
     fi
+
+    export LANGUAGE=en_US.UTF-8
+    export LC_ALL=en_US.UTF-8
+    export LANG=en_US.UTF-8
+    export LC_TYPE=en_US.UTF-8
+
+    # Fix so line drawing characters are shown correctly in Putty on Windows. See #744.
+    export NCURSES_NO_UTF8_ACS=1
+
+    #check for user
+    echo -e "$YELLOW => Installing needed packages for setup to$GREEN continue$YELLOW  <= $COL_RESET"
+    hide_output sudo apt-get -q -q update
+    hide_output sudo apt-get install -y figlet
+    hide_output sudo apt-get install -y lolcat
+    apt_get_quiet install dialog python3 python3-pip acl nano git apt-transport-https || exit 1
+
+    # Are we running as root?
+    if [[ $EUID -ne 0 ]]; then
+        # Welcome
+        message_box "Yiimpool Installer $VERSION" \
+        "Hello and thanks for using the Yiimpool Installer!
+        \n\nInstallation for the most part is fully automated. In most cases any user responses that are needed are asked prior to the installation.
+        \n\nNOTE: You should only install this on a brand new Ubuntu 20.04, 18.04, 16.04, or Debian 10 installation."
+        source existing_user.sh
+        exit
+    else
+        source create_user.sh
+        exit
+    fi
+    cd ~
+
+else
+    clear
+
+    # Ensure Python reads/writes files in UTF-8. If the machine
+    # triggers some other locale in Python, like ASCII encoding,
+    # Python may not be able to read/write files. This is also
+    # in the management daemon startup script and the cron script.
     
-    echo "Downloading Yiimpool Installer ${TAG}. . ."
-    git clone \
-        -b ${TAG} --depth 1 \
-        https://github.com/Barzillin/yiimp_install_script \
-        "$HOME"/yiimp_install_script \
-        < /dev/null 2> /dev/null
-
-    if [ $? -ne 0 ]; then
-        echo "Failed to clone the repository."
-        exit 1
+    if ! locale -a | grep en_US.utf8 >/dev/null; then
+    # Generate locale if not exists
+    hide_output locale-gen en_US.UTF-8
     fi
 
-    echo
+    export LANGUAGE=en_US.UTF-8
+    export LC_ALL=en_US.UTF-8
+    export LANG=en_US.UTF-8
+    export LC_TYPE=en_US.UTF-8
+    # Fix so line drawing characters are shown correctly in Putty on Windows. See #744.
+    export NCURSES_NO_UTF8_ACS=1
+
+    # Load our functions and variables.
+    source /etc/functions.sh
+    source /etc/yiimpool.conf
+    # Start yiimpool
+    cd $HOME/yiimp_install_script/install
+    source menu.sh
+    cd ~
 fi
-
-cd "$HOME/yiimp_install_script/" || { echo "Directory $HOME/yiimp_install_script does not exist."; exit 1; }
-
-# Update it.
-sudo chown -R "$USER" "$HOME/yiimp_install_script/.git/"
-if [ "${TAG}" != "$(git describe --tags)" ]; then
-    echo "Updating Yiimpool Installer to ${TAG} . . ."
-    git fetch --depth 1 --force --prune origin tag ${TAG}
-    if ! git checkout -q ${TAG}; then
-        echo "Update failed. Did you modify something in $(pwd)?"
-        exit 1
-    fi
-    echo
-fi
-
-# Start setup script.
-bash "$HOME/yiimp_install_script/install/start.sh"

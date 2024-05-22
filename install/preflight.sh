@@ -1,11 +1,5 @@
 #!/usr/bin/env bash
 
-##################################################################################
-# This is the entry point for configuring the system.
-# Source https://mailinabox.email/ https://github.com/mail-in-a-box/mailinabox
-# Updated by Afiniel for yiimpool use...
-##################################################################################
-
 # Detect the OS version
 OS_VERSION=$(lsb_release -d | sed 's/.*:\s*//')
 
@@ -65,13 +59,4 @@ if [ "$ARCHITECTURE" != "x86_64" ]; then
     echo "Your architecture is $ARCHITECTURE"
     exit 1
   fi
-fi
-
-# Set STORAGE_USER and STORAGE_ROOT to default values (crypto-data and /home/crypto-data), unless
-# we've already got those values from a previous run.
-if [ -z "$STORAGE_USER" ]; then
-  STORAGE_USER=$([[ -z "$DEFAULT_STORAGE_USER" ]] && echo "crypto-data" || echo "$DEFAULT_STORAGE_USER")
-fi
-if [ -z "$STORAGE_ROOT" ]; then
-  STORAGE_ROOT=$([[ -z "$DEFAULT_STORAGE_ROOT" ]] && echo "/home/$STORAGE_USER" || echo "$DEFAULT_STORAGE_ROOT")
 fi
