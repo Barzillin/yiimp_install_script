@@ -1,28 +1,5 @@
 #!/usr/bin/env bash
 
-# Detect the OS version
-OS_VERSION=$(lsb_release -d | sed 's/.*:\s*//')
-
-if [[ "$OS_VERSION" == "Ubuntu 20.04 LTS" ]]; then
-  DISTRO=20
-  sudo chmod g-w /etc /etc/default /usr
-
-elif [[ "$OS_VERSION" == "Ubuntu 18.04 LTS" ]]; then
-  DISTRO=18
-  sudo chmod g-w /etc /etc/default /usr
-
-elif [[ "$OS_VERSION" == "Ubuntu 16.04 LTS" ]]; then
-  DISTRO=16
-  sudo chmod g-w /etc /etc/default /usr
-
-elif [[ "$OS_VERSION" == "Debian GNU/Linux 10 (buster)" ]]; then
-  DISTRO=10
-  sudo chmod g-w /etc /etc/default /usr
-
-else
-  echo "This script only supports Ubuntu 16.04 LTS, 18.04 LTS, 20.04 LTS, and Debian 10."
-  exit 1
-fi
 
 # Check if swap is needed
 SWAP_MOUNTED=$(cat /proc/swaps | tail -n+2)
